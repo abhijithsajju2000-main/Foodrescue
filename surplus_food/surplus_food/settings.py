@@ -33,7 +33,7 @@ RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [config('HOST_ADDRESS')]
 
 
 # Application definition
