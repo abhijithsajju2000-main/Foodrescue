@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Payment — FoodShare{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="logo">🌿 FoodShare</div>
+            <div class="sb-user mt-2">
+                <div class="sidebar-av" id="sb-av"></div>
+                <span>{{ request.user.username }}</span>
+            </div>
+            <span class="role-pill">{{ request.user.role }}</span>
+        </div>
+        <nav>
+            <a href="{% url 'donation-list' %}">🏠 Dashboard</a>
+            <a href="{% url 'donation-list' %}">🛒 Browse &amp; Buy</a>
+            <a href="{% url 'my-claims' %}">📋 My Claims</a>
+            <a href="{% url 'profile' %}">👤 My Profile</a>
+        </nav>
+        <div class="signout">
+            <a href="{% url 'logout' %}">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <div class="main-content d-flex align-items-center justify-content-center" style="min-height:90vh;">
+        <div class="anim-up" style="width:100%; max-width:480px;">
+
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div style="width:64px; height:64px; background:linear-gradient(135deg,#d8f3dc,#b7e4c7); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 16px;">
+                    💳
+                </div>
+                <h4 class="fw-900 mb-1" style="color:#1b4332; font-size:1.5rem; letter-spacing:-0.3px;">Order Summary</h4>
+                <p class="text-muted small mb-0">Review your order before payment</p>
+            </div>
+
+            <!-- Order Card -->
+            <div class="section-card mb-3">
+                <div class="payment-row">
+                    <span class="fw-600" style="color:#6b7280;">Food</span>
+                    <span class="fw-800" style="color:#1b4332;">{{ donation.food_name }}</span>
+                </div>
+                <div class="payment-row">
+                    <span class="fw-600" style="color:#6b7280;">Donor</span>
+                    <span>{{ donation.donor.username }}</span>
+                </div>
+                <div class="payment-row">
+                    <span class="fw-600" style="color:#6b7280;">Quantity</span>
+                    <span class="fw-700">{{ quantity }}</span>
+                </div>
+                <div class="payment-row">
+                    <span class="fw-600" style="color:#6b7280;">Price / unit</span>
+                    <span>₹{{ donation.price }}</span>
+                </div>
+                <div class="payment-row" style="border-bottom:none; padding-top:16px; margin-top:4px; border-top:2px solid #f0f0f0;">
+                    <span class="fw-800" style="font-size:1rem;">Total Amount</span>
+                    <span class="fw-900" style="font-size:1.3rem; color:#2d6a4f;">₹{{ donation.price|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <!-- Pickup notice -->
+            <div class="pickup-notice mb-4">
+                📍 Self-pickup from <strong>{{ donation.location }}</strong>
+            </div>
+
+            <!-- Actions -->
+            <a href="{% url 'donation-detail' uuid=donation.uuid %}"
+               class="btn btn-outline-secondary w-100 rounded-3 py-2 fw-700">
+                <i class="fa fa-arrow-left me-2"></i>Cancel and go back
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+(function(){
+    var n = "{{ request.user.username }}";
+    var el = document.getElementById('sb-av');
+    if (el && n) el.textContent = n.charAt(0).toUpperCase();
+})();
+
+var options = {
+    "key": "{{ razorpay_key }}",
+    "amount": "{{ amount }}",
+    "currency": "INR",
+    "name": "FoodShare",
+    "description": "{{ donation.food_name }}",
+    "order_id": "{{ razorpay_order_id }}",
+    "handler": function(response) {
+        var form = document.createElement("form");
+        form.method = "POST";
+        form.action = "{% url 'payment-success' uuid=donation.uuid %}";
+
+        var csrfInput = document.createElement("input");
+        csrfInput.type = "hidden";
+        csrfInput.name = "csrfmiddlewaretoken";
+        csrfInput.value = "{{ csrf_token }}";
+        form.appendChild(csrfInput);
+
+        var qtyInput = document.createElement("input");
+        qtyInput.type = "hidden";
+        qtyInput.name = "quantity";
+        qtyInput.value = "{{ quantity }}";
+        form.appendChild(qtyInput);
+
+        ['razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature'].forEach(function(key) {
+            var input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = response[key];
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+    },
+    "prefill": {
+        "name": "{{ request.user.username }}",
+        "email": "{{ request.user.email }}"
+    },
+    "theme": { "color": "#2d6a4f" }
+};
+
+var rzp = new Razorpay(options);
+rzp.open();
+</script>
+{% endblock %}

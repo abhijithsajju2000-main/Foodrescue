@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — FoodShare{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="logo">🌿 FoodShare</div>
+            <div class="sb-user mt-2">
+                <div class="sidebar-av" id="sb-av"></div>
+                <span>{{ request.user.username }}</span>
+            </div>
+            <span class="role-pill">{{ request.user.role }}</span>
+        </div>
+        <nav>
+            {% if request.user.role == 'Admin' %}
+                <a href="{% url 'admin-dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin-users' %}">👥 Users</a>
+            {% elif request.user.role == 'Donor' %}
+                <a href="{% url 'donation-list' %}">🏠 Dashboard</a>
+                <a href="{% url 'add-donation' %}">➕ Post Donation</a>
+                <a href="{% url 'my-donations' %}">📋 My Donations</a>
+            {% else %}
+                <a href="{% url 'donation-list' %}">🏠 Dashboard</a>
+                <a href="{% url 'my-claims' %}">📋 My Claims</a>
+            {% endif %}
+            <a href="{% url 'profile' %}" class="active">👤 My Profile</a>
+        </nav>
+        <div class="signout">
+            <a href="{% url 'logout' %}">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h4>My Profile</h4>
+                <p class="sub mt-1 mb-0">Manage your account details</p>
+            </div>
+        </div>
+
+        <div style="max-width:720px;">
+
+            <!-- Profile Header Card -->
+            <div class="section-card mb-4 anim-up">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="avatar-lg" id="profile-av"></div>
+                    <div>
+                        <h5 class="fw-900 mb-1" style="color:#1b4332; font-size:1.2rem;">{{ request.user.username }}</h5>
+                        <div class="text-muted small mb-2">{{ request.user.email }}</div>
+                        <span class="ngo-badge">{{ request.user.role }}</span>
+                        {% if request.user.role == 'NGO' %}
+                            &nbsp;
+                            {% if request.user.is_verified %}
+                                <span class="badge bg-success fw-700" style="border-radius:20px; padding:5px 12px; font-size:0.72rem;">
+                                    <i class="fa fa-check me-1"></i> Verified
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark fw-700" style="border-radius:20px; padding:5px 12px; font-size:0.72rem;">
+                                    <i class="fa fa-clock me-1"></i> Pending Verification
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Info -->
+            <div class="section-card mb-4 anim-up d1">
+                <h6 class="fw-800 mb-3" style="color:#1b4332;">Account Information</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="small fw-700 mb-1" style="color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; font-size:0.7rem;">Username</div>
+                        <div class="fw-700" style="color:#374151;">{{ request.user.username }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small fw-700 mb-1" style="color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; font-size:0.7rem;">Email</div>
+                        <div class="fw-700" style="color:#374151;">{{ request.user.email }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small fw-700 mb-1" style="color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; font-size:0.7rem;">Role</div>
+                        <span class="ngo-badge" style="font-size:0.72rem;">{{ request.user.role }}</span>
+                    </div>
+                    {% if request.user.role == 'NGO' %}
+                    <div class="col-md-4">
+                        <div class="small fw-700 mb-1" style="color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; font-size:0.7rem;">NGO Darpan ID</div>
+                        <div class="fw-700" style="color:#374151;">{{ request.user.ngo_darpan_id|default:'—' }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small fw-700 mb-1" style="color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; font-size:0.7rem;">PAN Number</div>
+                        <div class="fw-700" style="color:#374151;">{{ request.user.organization_pan|default:'—' }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small fw-700 mb-1" style="color:#9ca3af; text-transform:uppercase; letter-spacing:0.8px; font-size:0.7rem;">Verification</div>
+                        {% if request.user.is_verified %}
+                            <span class="badge bg-success fw-700" style="border-radius:20px; padding:5px 12px; font-size:0.72rem;">Verified</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark fw-700" style="border-radius:20px; padding:5px 12px; font-size:0.72rem;">Pending</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Edit Info -->
+            <div class="section-card anim-up d2">
+                <h6 class="fw-800 mb-3" style="color:#1b4332;">Update Contact Info</h6>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" name="phone" class="form-control"
+                                   value="{{ request.user.phone|default:'' }}"
+                                   placeholder="+91 98765 43210">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Address</label>
+                            <input type="text" name="address" class="form-control"
+                                   value="{{ request.user.address|default:'' }}"
+                                   placeholder="Your city / area">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-green rounded-3 px-5 py-2 fw-700">
+                            <i class="fa fa-check me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- Change Password -->
+            <div class="section-card mt-4 anim-up d3">
+                <h6 class="fw-800 mb-3" style="color:#1b4332;">Change Password</h6>
+                <a href="{% url 'generate-otp' %}" class="btn btn-outline-green rounded-3 px-4 py-2 fw-700">
+                    <i class="fa fa-lock me-2"></i>Change Password via OTP
+                </a>
+                <p class="text-muted small mt-2 mb-0">An OTP will be sent to your registered email to verify before changing.</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    var n = "{{ request.user.username }}";
+    var first = n ? n.charAt(0).toUpperCase() : '?';
+    var sbAv = document.getElementById('sb-av');
+    var prAv = document.getElementById('profile-av');
+    if (sbAv) sbAv.textContent = first;
+    if (prAv) prAv.textContent = first;
+})();
+</script>
+{% endblock %}

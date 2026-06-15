@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}My Claims — FoodShare{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="logo">🌿 FoodShare</div>
+            <div class="sb-user mt-2">
+                <div class="sidebar-av" id="sb-av"></div>
+                <span>{{ request.user.username }}</span>
+            </div>
+            <span class="role-pill">{{ request.user.role }}</span>
+        </div>
+        <nav>
+            <a href="{% url 'donation-list' %}">🏠 Dashboard</a>
+            <a href="{% url 'my-claims' %}" class="active">📋 My Claims</a>
+            <a href="{% url 'profile' %}">👤 My Profile</a>
+        </nav>
+        <div class="signout">
+            <a href="{% url 'logout' %}">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h4>My Claims</h4>
+                <p class="sub mt-1 mb-0">Your food orders and pickups</p>
+            </div>
+            <a href="{% url 'donation-list' %}" class="btn btn-green rounded-3 px-4">🔍 Browse More</a>
+        </div>
+
+        {% if claims %}
+        <div class="section-card anim-up">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Food</th>
+                            <th>Donor</th>
+                            <th>Qty</th>
+                            <th>Amount Paid</th>
+                            <th>Claimed On</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for claim in claims %}
+                        <tr>
+                            <td class="fw-700" style="color:#1b4332;">{{ claim.donation.food_name }}</td>
+                            <td class="text-muted">{{ claim.donation.donor.username }}</td>
+                            <td class="fw-700">{{ claim.quantity_claimed }}</td>
+                            <td>
+                                {% if claim.amount_paid == 0 %}
+                                    <span class="ngo-badge">FREE</span>
+                                {% else %}
+                                    <span class="fw-700" style="color:#2d6a4f;">₹{{ claim.amount_paid }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ claim.claimed_at|date:'d M Y, h:i A' }}</td>
+                            <td>
+                                <a href="{% url 'donation-detail' uuid=claim.donation.uuid %}" class="btn btn-sm btn-outline-green rounded-3">
+                                    View <i class="fa fa-arrow-right ms-1" style="font-size:0.7rem;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="section-card empty-state anim-up">
+            <div class="icon">🛒</div>
+            <h5>No claims yet</h5>
+            <p class="text-muted">Browse available donations and claim your first one!</p>
+            <a href="{% url 'donation-list' %}" class="btn btn-green rounded-3 px-4 mt-2">🔍 Browse Donations</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+(function(){
+    var n = "{{ request.user.username }}";
+    var el = document.getElementById('sb-av');
+    if (el && n) el.textContent = n.charAt(0).toUpperCase();
+})();
+</script>
+{% endblock %}

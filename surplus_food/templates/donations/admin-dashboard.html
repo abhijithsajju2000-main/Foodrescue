@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — FoodShare{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="logo">🌿 FoodShare</div>
+            <div class="sb-user mt-2">
+                <div class="sidebar-av" id="sb-av"></div>
+                <span>{{ request.user.username }}</span>
+            </div>
+            <span class="role-pill">Admin</span>
+        </div>
+        <nav>
+            <a href="{% url 'admin-dashboard' %}" class="active">📊 Dashboard</a>
+            <a href="{% url 'admin-users' %}">👥 Users</a>
+            <a href="{% url 'donation-list' %}">🍱 All Donations</a>
+        </nav>
+        <div class="signout">
+            <a href="{% url 'logout' %}">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h4>Dashboard</h4>
+                <p class="sub mt-1 mb-0">Overview of all platform activity</p>
+            </div>
+            <a href="{% url 'admin-users' %}" class="btn btn-outline-green btn-sm rounded-3 px-3">
+                <i class="fa fa-users me-1"></i> Manage Users
+            </a>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 anim-up">
+                <div class="stat-card green">
+                    <div class="stat-icon">🍱</div>
+                    <div class="stat-value">{{ total_donations }}</div>
+                    <div class="stat-label">Total Donations</div>
+                </div>
+            </div>
+            <div class="col-md-3 anim-up d1">
+                <div class="stat-card blue">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-value">{{ total_users }}</div>
+                    <div class="stat-label">Registered Users</div>
+                </div>
+            </div>
+            <div class="col-md-3 anim-up d2">
+                <div class="stat-card amber">
+                    <div class="stat-icon">🍽️</div>
+                    <div class="stat-value">{{ total_donors }}</div>
+                    <div class="stat-label">Active Donors</div>
+                </div>
+            </div>
+            <div class="col-md-3 anim-up d3">
+                <div class="stat-card red">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-value">{{ pending_ngos }}</div>
+                    <div class="stat-label">NGOs Pending Verify</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donations Table -->
+        <div class="section-card anim-up d4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="fw-800 mb-0" style="color:#1b4332;">All Donations</h5>
+                    <p class="text-muted small mb-0 mt-1">Complete list of food donations on the platform</p>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Food</th>
+                            <th>Donor</th>
+                            <th>Qty Left</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Posted</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donation in donations %}
+                        <tr>
+                            <td class="fw-700" style="color:#1b4332;">{{ donation.food_name }}</td>
+                            <td>
+                                <span class="text-muted" style="font-size:0.875rem;">{{ donation.donor.username }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-700">{{ donation.quantity_remaining }}</span>
+                            </td>
+                            <td class="fw-700" style="color:#2d6a4f;">₹{{ donation.price }}</td>
+                            <td>
+                                {% if donation.status == 'Available' %}
+                                    <span style="display:inline-block; background:#d8f3dc; color:#1b4332; font-weight:700; font-size:0.75rem; padding:5px 14px; border-radius:20px;">Available</span>
+                                {% else %}
+                                    <span style="display:inline-block; background:#f3f4f6; color:#6b7280; font-weight:700; font-size:0.75rem; padding:5px 14px; border-radius:20px;">Completed</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ donation.created_at|date:'d M Y' }}</td>
+                            <td>
+                                <a href="{% url 'donation-detail' uuid=donation.uuid %}" class="btn btn-sm btn-outline-green rounded-3">
+                                    View <i class="fa fa-arrow-right ms-1" style="font-size:0.7rem;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div style="color:#9ca3af; font-size:2rem; margin-bottom:10px;">🍽️</div>
+                                <div class="text-muted fw-600">No donations yet</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    var n = "{{ request.user.username }}";
+    var el = document.getElementById('sb-av');
+    if (el && n) el.textContent = n.charAt(0).toUpperCase();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% block title %}Browse Food — FoodShare{% endblock %}
+
+{% block content %}
+
+{% if request.user.is_authenticated %}
+<!-- ===== AUTHENTICATED DASHBOARD ===== -->
+<div class="main-layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            <div class="logo">🌿 FoodShare</div>
+            <div class="sb-user mt-2">
+                <div class="sidebar-av" id="sb-av"></div>
+                <span>{{ request.user.username }}</span>
+            </div>
+            <span class="role-pill">{{ request.user.role }}</span>
+        </div>
+        <nav>
+            {% if request.user.role == 'Admin' %}
+                <a href="{% url 'admin-dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin-users' %}">👥 Users</a>
+                <a href="{% url 'donation-list' %}" class="active">🍱 All Donations</a>
+            {% elif request.user.role == 'Donor' %}
+                <a href="{% url 'donation-list' %}" class="active">🏠 Dashboard</a>
+                <a href="{% url 'add-donation' %}">➕ Post Donation</a>
+                <a href="{% url 'my-donations' %}">📋 My Donations</a>
+                <a href="{% url 'profile' %}">👤 My Profile</a>
+            {% elif request.user.role == 'NGO' %}
+                <a href="{% url 'donation-list' %}" class="active">🏠 Dashboard</a>
+                <a href="{% url 'my-claims' %}">✅ My Claims</a>
+                <a href="{% url 'profile' %}">👤 My Profile</a>
+            {% else %}
+                <a href="{% url 'donation-list' %}" class="active">🏠 Dashboard</a>
+                <a href="{% url 'my-claims' %}">📋 My Claims</a>
+                <a href="{% url 'profile' %}">👤 My Profile</a>
+            {% endif %}
+        </nav>
+        <div class="signout">
+            <a href="{% url 'logout' %}">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <div class="page-header">
+            <div>
+                <h4>
+                    {% if request.user.role == 'NGO' %}Browse Donations
+                    {% elif request.user.role == 'Donor' %}All Donations
+                    {% elif request.user.role == 'Admin' %}All Donations
+                    {% else %}Browse &amp; Buy
+                    {% endif %}
+                </h4>
+                <p class="sub mt-1 mb-0">
+                    {% if request.user.role == 'NGO' %}Free food available for your NGO
+                    {% elif request.user.role == 'Donor' %}See what others are donating
+                    {% else %}Fresh surplus food at reduced prices
+                    {% endif %}
+                </p>
+            </div>
+            {% if request.user.role == 'Donor' %}
+                <a href="{% url 'add-donation' %}" class="btn btn-green rounded-3 px-4">➕ Post Donation</a>
+            {% endif %}
+        </div>
+
+        {% if request.user.role == 'User' %}
+        <div class="pickup-notice mb-4">
+            🏪 <strong>Self-pickup required.</strong> Collect your order in person — no delivery available. NGOs receive all food for free.
+        </div>
+        {% elif request.user.role == 'NGO' %}
+        <div class="pickup-notice mb-4" style="background:linear-gradient(135deg,#d8f3dc,#b7e4c7); border-left-color:#2d6a4f;">
+            🏥 <strong>Free for your NGO.</strong> All available donations are yours at no cost. Just claim and collect.
+        </div>
+        {% endif %}
+
+        <!-- Search -->
+        <div class="search-wrap mb-4">
+            <form method="GET" class="d-flex w-100">
+                <input type="text" name="query" class="form-control border-0 py-2 px-3"
+                       placeholder="Search by food name or location..."
+                       value="{{ request.GET.query }}">
+                <button type="submit">🔍 Search</button>
+            </form>
+        </div>
+
+        <!-- Donation Cards -->
+        <div class="row g-3">
+            {% for donation in donations %}
+            <div class="col-md-4 anim-up">
+                <div class="card food-card h-100" style="padding:0;">
+                    {% if donation.photo %}
+                        <img src="{{ donation.photo.url }}" class="donation-card-img">
+                    {% else %}
+                        <div class="donation-card-placeholder">🍽️</div>
+                    {% endif %}
+
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-800 mb-0" style="color:#1b4332; font-size:0.95rem; line-height:1.3;">{{ donation.food_name }}</h6>
+                            <span style="display:inline-block; background:#d8f3dc; color:#1b4332; font-weight:700; font-size:0.65rem; padding:3px 10px; border-radius:20px; white-space:nowrap; margin-left:8px;">{{ donation.status }}</span>
+                        </div>
+
+                        <p class="text-muted small mb-2" style="font-size:0.8rem;">by <strong>{{ donation.donor.username }}</strong></p>
+
+                        <div class="d-flex gap-3 mb-2" style="font-size:0.78rem; color:#6b7280;">
+                            <span>📦 {{ donation.quantity_remaining }} left</span>
+                            <span>📍 {{ donation.location }}</span>
+                        </div>
+                        <div style="font-size:0.75rem; color:#9ca3af;" class="mb-3">⏰ {{ donation.expiry_time|date:"d M, h:i A" }}</div>
+
+                        {% if request.user.role == 'NGO' %}
+                            <div class="ngo-badge mb-3">🏥 Free for NGOs</div>
+                        {% else %}
+                            <div class="price-tag mb-3">₹{{ donation.price }} <span class="fw-600 text-muted" style="font-size:0.82rem;">/ unit</span></div>
+                        {% endif %}
+
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'donation-detail' uuid=donation.uuid %}" class="btn btn-outline-green btn-sm rounded-3 flex-grow-1">👁 View</a>
+
+                            {% if request.user.role == 'Admin' %}
+                                {# Admin: view only #}
+                            {% elif request.user.role == 'Donor' and request.user == donation.donor %}
+                                <a href="{% url 'edit-donation' uuid=donation.uuid %}" class="btn btn-green btn-sm rounded-3 flex-grow-1">✏️ Edit</a>
+                            {% elif request.user.role == 'NGO' %}
+                                <a href="{% url 'donation-detail' uuid=donation.uuid %}" class="btn btn-green btn-sm rounded-3 flex-grow-1">✅ Claim Free</a>
+                            {% elif request.user.role == 'User' %}
+                                <a href="{% url 'donation-detail' uuid=donation.uuid %}" class="btn btn-green btn-sm rounded-3 flex-grow-1">🛒 Buy Now</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="section-card empty-state">
+                    <div class="icon">🍽️</div>
+                    <h5>No donations available right now</h5>
+                    <p class="text-muted">Check back soon or be the first to donate!</p>
+                    {% if request.user.role == 'Donor' %}
+                        <a href="{% url 'add-donation' %}" class="btn btn-green rounded-3 px-4 mt-2">➕ Post a Donation</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function(){
+    var n = "{{ request.user.username }}";
+    var el = document.getElementById('sb-av');
+    if (el && n) el.textContent = n.charAt(0).toUpperCase();
+})();
+</script>
+
+{% else %}
+<!-- ===== PUBLIC LANDING PAGE ===== -->
+
+<!-- Hero -->
+<div class="hero-section">
+    <div class="hero-bg-pattern"></div>
+    <div style="position:relative;">
+        <div class="anim-up">
+            <span class="hero-tag">❤️ 14,800+ meals redistributed this year</span>
+        </div>
+        <h1 class="anim-up d1">Good Food Shouldn't<br>Go to Waste.</h1>
+        <p class="hero-sub anim-up d2">FoodShare connects restaurants and hotels with local NGOs and food lovers. Buy surplus food at reduced prices — or receive it free as a verified NGO.</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap anim-up d3">
+            <a href="{% url 'register' %}" class="btn btn-light fw-800 rounded-3 px-4 py-2" style="color:#2d6a4f;">🛒 Buy Food</a>
+            <a href="{% url 'register' %}" class="btn fw-700 rounded-3 px-4 py-2" style="border:2px solid rgba(255,255,255,0.4); color:white; background:rgba(255,255,255,0.08);">🍽️ Donate Food</a>
+            <a href="{% url 'register' %}" class="btn fw-700 rounded-3 px-4 py-2" style="border:2px solid rgba(255,255,255,0.4); color:white; background:rgba(255,255,255,0.08);">🏥 NGO Access</a>
+        </div>
+    </div>
+    <!-- Wave separator -->
+    <div class="hero-wave">
+        <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="display:block; width:100%; height:80px;">
+            <path d="M0,20 C240,80 480,0 720,40 C960,80 1200,0 1440,30 L1440,80 L0,80 Z" fill="white"/>
+        </svg>
+    </div>
+</div>
+
+<!-- How it works -->
+<div class="how-section">
+    <div class="text-center mb-5">
+        <div class="section-label">How It Works</div>
+        <div class="section-heading">Four Roles. One Mission.</div>
+        <p class="section-sub">Every role plays a part in making sure good food reaches someone who needs it.</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-3 anim-up">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-icon">🍽️</div>
+                <div class="step-title">Donors Post Food</div>
+                <p class="step-desc">Restaurants &amp; hotels list surplus food with quantity, price, and a pickup window.</p>
+            </div>
+        </div>
+        <div class="col-md-3 anim-up d2">
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-icon">🛒</div>
+                <div class="step-title">Users Buy &amp; Pickup</div>
+                <p class="step-desc">Regular users browse the marketplace, pay the reduced price, and self-collect.</p>
+            </div>
+        </div>
+        <div class="col-md-3 anim-up d3">
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-icon">🏥</div>
+                <div class="step-title">NGOs Get It Free</div>
+                <p class="step-desc">Registered charities browse available donations and collect at absolutely no cost.</p>
+            </div>
+        </div>
+        <div class="col-md-3 anim-up d4">
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <div class="step-icon">♻️</div>
+                <div class="step-title">Zero Food Waste</div>
+                <p class="step-desc">Every meal finds a home — reducing waste while feeding communities across India.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-section">
+    <div class="text-center mb-5">
+        <div class="section-label">Our Impact</div>
+        <div class="section-heading">Numbers That Matter</div>
+    </div>
+    <div class="row g-3 text-center">
+        <div class="col-md-3 anim-up">
+            <div class="card food-card p-4">
+                <div class="stat-num count-up" data-target="14800">14,800+</div>
+                <div class="stat-lbl">Meals Redistributed</div>
+            </div>
+        </div>
+        <div class="col-md-3 anim-up d2">
+            <div class="card food-card p-4">
+                <div class="stat-num count-up" data-target="280">280</div>
+                <div class="stat-lbl">Active Donors</div>
+            </div>
+        </div>
+        <div class="col-md-3 anim-up d3">
+            <div class="card food-card p-4">
+                <div class="stat-num count-up" data-target="112">112</div>
+                <div class="stat-lbl">NGO Partners</div>
+            </div>
+        </div>
+        <div class="col-md-3 anim-up d4">
+            <div class="card food-card p-4">
+                <div class="stat-num count-up" data-target="24">24</div>
+                <div class="stat-lbl">Cities Covered</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="cta-section">
+    <div class="anim-up" style="max-width:580px; margin:0 auto;">
+        <h2 class="fw-900 mb-3" style="color:white; font-size:2rem; letter-spacing:-0.5px;">Ready to make a difference?</h2>
+        <p style="color:rgba(255,255,255,0.7); font-size:1rem; line-height:1.7; margin-bottom:32px;">
+            Join FoodShare for free and start connecting surplus food with people who need it most.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="{% url 'register' %}" class="btn btn-light fw-800 rounded-3 px-5 py-2" style="color:#1b4332;">Get Started Free</a>
+            <a href="{% url 'login' %}" class="btn fw-700 rounded-3 px-5 py-2" style="border:2px solid rgba(255,255,255,0.4); color:white; background:rgba(255,255,255,0.08);">Sign In</a>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="landing-footer">
+    <strong>🌿 FoodShare</strong> — Connecting surplus food to those who need it most.
+    &nbsp;·&nbsp; <a href="{% url 'login' %}">Sign In</a>
+    &nbsp;·&nbsp; <a href="{% url 'register' %}">Join Free</a>
+</div>
+
+<script>
+/* Counter animation on scroll */
+(function(){
+    var counters = document.querySelectorAll('.count-up');
+    if (!counters.length) return;
+    var observer = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+            if (!entry.isIntersecting) return;
+            var el = entry.target;
+            var target = parseInt(el.dataset.target, 10);
+            var duration = 1400;
+            var step = target / (duration / 16);
+            var current = 0;
+            var timer = setInterval(function(){
+                current += step;
+                if (current >= target) { current = target; clearInterval(timer); }
+                el.textContent = Math.floor(current).toLocaleString() + (target >= 1000 ? '+' : '');
+            }, 16);
+            observer.unobserve(el);
+        });
+    }, { threshold: 0.3 });
+    counters.forEach(function(c){ observer.observe(c); });
+})();
+</script>
+
+{% endif %}
+
+{% endblock %}

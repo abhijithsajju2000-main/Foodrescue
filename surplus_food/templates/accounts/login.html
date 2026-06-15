@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — FoodShare{% endblock %}
+
+{% block content %}
+<div class="auth-split">
+
+    <!-- Left Branding Panel -->
+    <div class="auth-panel-l d-none d-lg-flex flex-column justify-content-center">
+        <div style="position:relative; z-index:1;">
+            <div style="font-size:3rem; margin-bottom:24px;">🌿</div>
+            <h2 class="fw-900" style="color:white; font-size:2.2rem; letter-spacing:-0.5px; line-height:1.2; margin-bottom:16px;">
+                Fighting food waste,<br>one meal at a time.
+            </h2>
+            <p style="color:rgba(255,255,255,0.6); line-height:1.8; font-size:1rem; margin-bottom:0;">
+                Connect donors, NGOs, and communities.<br>
+                Good food deserves a good home.
+            </p>
+        </div>
+    </div>
+
+    <!-- Right Form Panel -->
+    <div class="auth-panel-r">
+        <div class="auth-form-box anim-up">
+
+            <div class="d-lg-none text-center mb-4">
+                <span style="font-size:2rem;">🌿</span>
+                <div class="fw-900" style="color:#1b4332; font-size:1.2rem; margin-top:4px;">FoodShare</div>
+            </div>
+
+            <h1 class="auth-form-title">Welcome back</h1>
+            <p class="auth-form-sub">Sign in to your FoodShare account</p>
+
+
+
+            {% if error %}
+                <div class="alert alert-danger mb-4">
+                    <i class="fa fa-circle-exclamation me-2"></i>{{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="Enter your username" required autofocus>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Password</label>
+                    <div style="position:relative;">
+                        <input type="password" name="password" id="pw-field" class="form-control" placeholder="••••••••" required style="padding-right:46px;">
+                        <button type="button" onclick="togglePw()"
+                            style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#9ca3af; padding:4px; font-size:0.95rem;">
+                            <i class="fa fa-eye" id="pw-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-green w-100 py-2 rounded-3 fw-700 mb-3" style="font-size:0.95rem;">
+                    Sign In &nbsp;<i class="fa fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="text-center mt-2">
+                <a href="{% url 'forgot-password' %}" style="color:#2d6a4f; font-size:0.85rem; font-weight:700;">Forgot password?</a>
+            </div>
+
+            <p class="text-center mb-0" style="color:#9ca3af; font-size:0.875rem;">
+                Don't have an account?
+                <a href="{% url 'register' %}" style="color:#2d6a4f; font-weight:800;">Create one free</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePw() {
+    var f = document.getElementById('pw-field');
+    var i = document.getElementById('pw-icon');
+    if (f.type === 'password') { f.type = 'text'; i.className = 'fa fa-eye-slash'; }
+    else { f.type = 'password'; i.className = 'fa fa-eye'; }
+}
+</script>
+{% endblock %}

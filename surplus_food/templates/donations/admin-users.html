@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Users — FoodShare Admin{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="logo">🌿 FoodShare</div>
+            <div class="sb-user mt-2">
+                <div class="sidebar-av" id="sb-av"></div>
+                <span>{{ request.user.username }}</span>
+            </div>
+            <span class="role-pill">Admin</span>
+        </div>
+        <nav>
+            <a href="{% url 'admin-dashboard' %}">📊 Dashboard</a>
+            <a href="{% url 'admin-users' %}" class="active">👥 Users</a>
+            <a href="{% url 'donation-list' %}">🍱 All Donations</a>
+        </nav>
+        <div class="signout">
+            <a href="{% url 'logout' %}">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h4>All Users</h4>
+                <p class="sub mt-1 mb-0">Manage registered users and NGO verifications</p>
+            </div>
+        </div>
+
+        <div class="section-card anim-up">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>NGO Darpan ID</th>
+                            <th>PAN</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="user-initial-av">{{ user.username|slice:":1"|upper }}</div>
+                                    <span class="fw-700">{{ user.username }}</span>
+                                </div>
+                            </td>
+                            <td class="text-muted small">{{ user.email }}</td>
+                            <td>
+                                {% if user.role == 'NGO' %}
+                                    <span class="ngo-badge">🏥 NGO</span>
+                                {% elif user.role == 'Donor' %}
+                                    <span class="badge fw-700" style="background:#fef3c7; color:#d97706; border-radius:20px; padding:5px 12px; font-size:0.72rem;">🍽️ Donor</span>
+                                {% elif user.role == 'Admin' %}
+                                    <span class="badge fw-700" style="background:#f0e6ff; color:#7c3aed; border-radius:20px; padding:5px 12px; font-size:0.72rem;">⚙️ Admin</span>
+                                {% else %}
+                                    <span class="badge fw-700" style="background:#dbeafe; color:#1d4ed8; border-radius:20px; padding:5px 12px; font-size:0.72rem;">🛒 User</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ user.ngo_darpan_id|default:'—' }}</td>
+                            <td class="text-muted small">{{ user.organization_pan|default:'—' }}</td>
+                            <td>
+                                {% if user.role == 'NGO' %}
+                                    {% if user.is_verified %}
+                                        <span class="badge bg-success fw-700" style="border-radius:20px; padding:5px 12px; font-size:0.72rem;">
+                                            <i class="fa fa-check me-1"></i> Verified
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark fw-700" style="border-radius:20px; padding:5px 12px; font-size:0.72rem;">
+                                            <i class="fa fa-clock me-1"></i> Pending
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.role == 'NGO' and not user.is_verified %}
+                                    <a href="{% url 'verify-ngo' id=user.id %}" class="btn btn-sm btn-green rounded-3 px-3">
+                                        <i class="fa fa-check me-1"></i> Verify
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div style="color:#9ca3af; font-size:2rem; margin-bottom:10px;">👥</div>
+                                <div class="text-muted fw-600">No users registered yet</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.user-initial-av {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2d6a4f, #40916c);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+}
+</style>
+
+<script>
+(function(){
+    var n = "{{ request.user.username }}";
+    var el = document.getElementById('sb-av');
+    if (el && n) el.textContent = n.charAt(0).toUpperCase();
+})();
+</script>
+{% endblock %}

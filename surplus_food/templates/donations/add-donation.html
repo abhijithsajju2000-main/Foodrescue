@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Post Donation — FoodShare{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="logo">🌿 FoodShare</div>
+            <div class="sb-user mt-2">
+                <div class="sidebar-av" id="sb-av"></div>
+                <span>{{ request.user.username }}</span>
+            </div>
+            <span class="role-pill">Donor</span>
+        </div>
+        <nav>
+            <a href="{% url 'donation-list' %}">🏠 Dashboard</a>
+            <a href="{% url 'add-donation' %}" class="active">➕ Post Donation</a>
+            <a href="{% url 'my-donations' %}">📋 My Donations</a>
+            <a href="{% url 'profile' %}">👤 My Profile</a>
+        </nav>
+        <div class="signout">
+            <a href="{% url 'logout' %}">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h4>Post Food Donation</h4>
+                <p class="sub mt-1 mb-0">List your surplus food for the community</p>
+            </div>
+        </div>
+
+        <div class="section-card anim-up" style="max-width:660px;">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-section-title">Food Details</div>
+
+                <div class="mb-3">
+                    <label class="form-label">Food Name</label>
+                    <input type="text" name="food_name" class="form-control"
+                           placeholder="e.g. Biryani, Fresh Bread, Mixed Salad" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description <span class="text-muted fw-600" style="font-size:0.8rem;">(optional)</span></label>
+                    <textarea name="description" class="form-control" rows="3"
+                              placeholder="Ingredients, dietary info, freshness — anything the recipient should know..."></textarea>
+                </div>
+
+                <div class="form-section-title">Quantity &amp; Pricing</div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Total Quantity</label>
+                        <input type="number" name="quantity" class="form-control" placeholder="e.g. 30 portions" required min="1">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Price per Unit (₹)</label>
+                        <input type="number" step="0.01" name="price" class="form-control" placeholder="e.g. 80" required min="0">
+                    </div>
+                </div>
+
+                <div class="form-section-title">Pickup &amp; Timing</div>
+
+                <div class="mb-3">
+                    <label class="form-label">Pickup Location</label>
+                    <input type="text" name="location" class="form-control"
+                           placeholder="e.g. MG Road, Kochi" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Expiry / Pickup Deadline</label>
+                    <input type="datetime-local" name="expiry_time" class="form-control" required>
+                </div>
+
+                <div class="form-section-title">Photo</div>
+
+                <div class="mb-4">
+                    <label class="form-label">Food Photo <span class="text-muted fw-600" style="font-size:0.8rem;">(optional)</span></label>
+                    <input type="file" name="photo" class="form-control" accept="image/*">
+                    <div class="mt-1" style="font-size:0.78rem; color:#9ca3af;">JPG, PNG or WebP · Max 5 MB</div>
+                </div>
+
+                <div class="p-3 rounded-3 mb-4" style="background:#f0faf4; border:1.5px solid #b7e4c7;">
+                    <div class="d-flex align-items-start gap-2">
+                        <span style="font-size:1.1rem;">🏥</span>
+                        <div>
+                            <div class="fw-800 small mb-1" style="color:#1b4332;">NGOs receive this food for free</div>
+                            <div class="small" style="color:#6b7280;">Regular users will pay the price you set. Verified NGOs always claim at ₹0.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-green w-100 rounded-3 py-2 fw-700" style="font-size:0.95rem;">
+                    Post Donation &nbsp;<i class="fa fa-plus"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    var n = "{{ request.user.username }}";
+    var el = document.getElementById('sb-av');
+    if (el && n) el.textContent = n.charAt(0).toUpperCase();
+})();
+</script>
+{% endblock %}

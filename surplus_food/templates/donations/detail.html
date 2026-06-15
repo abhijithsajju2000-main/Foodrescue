@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}{{ donation.food_name }} — FoodShare{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="logo">🌿 FoodShare</div>
+            <div class="sb-user mt-2">
+                <div class="sidebar-av" id="sb-av"></div>
+                <span>{{ request.user.username }}</span>
+            </div>
+            <span class="role-pill">{{ request.user.role }}</span>
+        </div>
+        <nav>
+            <a href="{% url 'donation-list' %}" class="active">🏠 Dashboard</a>
+            {% if request.user.role == 'Donor' %}
+                <a href="{% url 'add-donation' %}">➕ Post Donation</a>
+                <a href="{% url 'my-donations' %}">📋 My Donations</a>
+            {% elif request.user.role == 'User' or request.user.role == 'NGO' %}
+                <a href="{% url 'my-claims' %}">📋 My Claims</a>
+            {% elif request.user.role == 'Admin' %}
+                <a href="{% url 'admin-dashboard' %}">📊 Dashboard</a>
+                <a href="{% url 'admin-users' %}">👥 Users</a>
+            {% endif %}
+            <a href="{% url 'profile' %}">👤 My Profile</a>
+        </nav>
+        <div class="signout">
+            <a href="{% url 'logout' %}">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <a href="{% url 'donation-list' %}" class="fw-700 d-inline-flex align-items-center gap-1 mb-4"
+           style="color:#6b7280; font-size:0.875rem; text-decoration:none; transition:color 0.15s;"
+           onmouseover="this.style.color='#1b4332'" onmouseout="this.style.color='#6b7280'">
+            <i class="fa fa-arrow-left"></i> Back to listings
+        </a>
+
+        <div class="row g-4">
+            <!-- Image -->
+            <div class="col-md-5 anim-sl">
+                {% if donation.photo %}
+                    <img src="{{ donation.photo.url }}" class="detail-img">
+                {% else %}
+                    <div class="detail-placeholder">🍽️</div>
+                {% endif %}
+            </div>
+
+            <!-- Details -->
+            <div class="col-md-7 anim-up">
+                <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                    <span style="display:inline-block; background:#d8f3dc; color:#1b4332; font-weight:700; font-size:0.75rem; padding:5px 14px; border-radius:20px;">
+                        {{ donation.status }}
+                    </span>
+                    {% if request.user.role == 'NGO' and request.user.is_verified %}
+                        <span class="ngo-badge">🏥 Free for NGOs</span>
+                    {% endif %}
+                </div>
+
+                <h2 class="fw-900 mb-1" style="color:#1b4332; font-size:1.8rem; letter-spacing:-0.5px;">{{ donation.food_name }}</h2>
+                <p class="text-muted mb-3" style="font-size:0.9rem;">by <strong>{{ donation.donor.username }}</strong></p>
+
+                {% if donation.description %}
+                    <p class="mb-3" style="color:#374151; line-height:1.75; font-size:0.95rem;">{{ donation.description }}</p>
+                {% endif %}
+
+                <!-- Info Pills -->
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="info-pill green">📦 {{ donation.quantity_remaining }} portions left</span>
+                    <span class="info-pill gray">📍 {{ donation.location }}</span>
+                    <span class="info-pill amber">⏰ {{ donation.expiry_time|date:"d M Y, h:i A" }}</span>
+                </div>
+
+                {% if not request.user.role == 'NGO' or not request.user.is_verified %}
+                    <div class="price-tag mb-3">
+                        ₹{{ donation.price }}
+                        <span class="text-muted fw-600" style="font-size:0.9rem; font-weight:500;"> / unit</span>
+                    </div>
+                {% endif %}
+
+                <div class="pickup-notice mb-4">
+                    🏪 <strong>Self-pickup only.</strong> Collect from: {{ donation.location }}
+                </div>
+
+                {% if request.user.role == 'User' or request.user.role == 'NGO' %}
+                    {% if donation.donor != request.user %}
+                    <div class="section-card" style="padding:22px;">
+                        <form method="POST" action="{% url 'claim-food' uuid=donation.uuid %}">
+                            {% csrf_token %}
+                            <label class="form-label">How many portions?</label>
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <input type="number" name="quantity_claimed" class="form-control"
+                                       style="width:120px;" value="1"
+                                       min="1" max="{{ donation.quantity_remaining }}">
+                                <span class="text-muted small">max {{ donation.quantity_remaining }}</span>
+                            </div>
+                            {% if request.user.role == 'NGO' and request.user.is_verified %}
+                                <button type="submit" class="btn btn-green rounded-3 px-5 py-2 fw-700">
+                                    ✅ Accept Free
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-green rounded-3 px-5 py-2 fw-700">
+                                    🛒 Proceed to Buy
+                                </button>
+                            {% endif %}
+                        </form>
+                    </div>
+                    {% else %}
+                        <div class="alert alert-warning">You cannot claim your own donation.</div>
+                    {% endif %}
+                {% endif %}
+
+                {% if request.user == donation.donor %}
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{% url 'edit-donation' uuid=donation.uuid %}" class="btn btn-outline-green rounded-3 px-4">
+                        ✏️ Edit
+                    </a>
+                    <a href="{% url 'delete-donation' uuid=donation.uuid %}"
+                       class="btn btn-outline-danger rounded-3 px-4"
+                       onclick="return confirm('Delete this donation? This cannot be undone.')">
+                        🗑️ Delete
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    var n = "{{ request.user.username }}";
+    var el = document.getElementById('sb-av');
+    if (el && n) el.textContent = n.charAt(0).toUpperCase();
+})();
+</script>
+{% endblock %}
