@@ -33,7 +33,7 @@ RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [config('HOST_ADDRESS')]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -95,7 +95,6 @@ if config('ENVIRONMENT') == 'production' :
     }
 
 else:
-    
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',

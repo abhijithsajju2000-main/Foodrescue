@@ -185,6 +185,9 @@ class EditDonationView(View):
 
         donation = FoodDonation.objects.get(uuid=uuid)
 
+        if donation.donor != request.user:
+            return redirect('donation-list')
+
         data = {'page': self.page, 'donation': donation}
 
         return render(request, self.template, context=data)
@@ -194,6 +197,9 @@ class EditDonationView(View):
         uuid = kwargs.get('uuid')
 
         donation = FoodDonation.objects.get(uuid=uuid)
+
+        if donation.donor != request.user:
+            return redirect('donation-list')
 
         donation.food_name = request.POST.get('food_name')
 
@@ -222,6 +228,9 @@ class DeleteDonationView(View):
         uuid = kwargs.get('uuid')
 
         donation = FoodDonation.objects.get(uuid=uuid)
+
+        if donation.donor != request.user:
+            return redirect('donation-list')
 
         # Soft delete — same as Cake Tales!
 
